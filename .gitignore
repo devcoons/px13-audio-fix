@@ -1,0 +1,8 @@
+rpmbuild/
+*.tar.gz
+*.rpm
+*.src.rpm
+*~
+*.swp
+.DS_Store
+px13-audio-fix-1.0/

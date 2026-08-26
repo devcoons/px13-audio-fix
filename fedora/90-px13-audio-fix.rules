@@ -1,0 +1,2 @@
+# Re-apply the SKU-specific UCM long-name override when a sound card appears.
+ACTION=="add", SUBSYSTEM=="sound", KERNEL=="card*", TAG+="systemd", ENV{SYSTEMD_WANTS}+="px13-audio-fix-ucm.service"

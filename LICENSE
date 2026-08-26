@@ -1,0 +1,19 @@
+This Fedora package combines two licenses, matching upstream
+https://github.com/ftoleedo/px13-audio-fix:
+
+  * Kernel module (module/tas2783-sdw.c, module/tas2783.h):
+    GPL-2.0-only, derived from the Linux tas2783 SoundWire driver
+    (Texas Instruments / kernel authors).
+
+  * Packaging files, helper scripts, and documentation in this
+    repository: CC0-1.0. See LICENSE.upstream for the original CC0
+    notice from ftoleedo/px13-audio-fix.
+
+  * ALSA UCM fragments in configs/ follow their respective upstream
+    projects.
+
+The full CC0 text is at:
+https://creativecommons.org/publicdomain/zero/1.0/legalcode
+
+The GPL-2.0 text is at:
+https://www.gnu.org/licenses/old-licenses/gpl-2.0.html

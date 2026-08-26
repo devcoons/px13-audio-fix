@@ -1,0 +1,13 @@
+[Unit]
+Description=Apply ASUS ProArt PX13 ALSA UCM speaker override
+Documentation=https://github.com/devcoons/px13-audio-fix
+After=systemd-udev-settle.service
+ConditionPathExists=/proc/asound/cards
+
+[Service]
+Type=oneshot
+ExecStart=/usr/libexec/px13-audio-fix/apply-ucm
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
