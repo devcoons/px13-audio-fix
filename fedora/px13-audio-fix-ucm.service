@@ -1,13 +1,14 @@
 [Unit]
 Description=Apply ASUS ProArt PX13 ALSA UCM speaker override
 Documentation=https://github.com/devcoons/px13-audio-fix
-After=systemd-udev-settle.service
+After=systemd-udev-settle.service sound.target
 ConditionPathExists=/proc/asound/cards
 
 [Service]
 Type=oneshot
 ExecStart=/usr/libexec/px13-audio-fix/apply-ucm
-RemainAfterExit=yes
+# Stay inactive after a run so a later sound-card add (udev SYSTEMD_WANTS)
+# executes apply-ucm again. RemainAfterExit would swallow that event.
 
 [Install]
 WantedBy=multi-user.target

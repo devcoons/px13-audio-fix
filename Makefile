@@ -1,6 +1,6 @@
 # SPDX-License-Identifier: CC0-1.0
 NAME        := px13-audio-fix
-VERSION     := 1.0
+VERSION     := 1.1
 SPEC        := $(NAME).spec
 TARBALL     := $(NAME)-$(VERSION).tar.gz
 DISTDIR     := $(NAME)-$(VERSION)

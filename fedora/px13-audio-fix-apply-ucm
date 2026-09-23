@@ -35,7 +35,19 @@ fi
 # TAS2783 blobs live under ti/audio/tas2783/ and must not be deleted.
 rm -f /usr/lib/firmware/1714-1-8.bin.xz /usr/lib/firmware/1714-1-B.bin.xz
 
-if ! CARD="$(px13_find_card)"; then
+# The oneshot is started from multi-user.target, which is often before the
+# SoundWire card is registered. Exit 0 in that window used to stick (the
+# unit stayed active) and the later card-add event never ran this script.
+CARD=""
+for _try in $(seq 1 40); do
+    if CARD="$(px13_find_card)"; then
+        break
+    fi
+    CARD=""
+    sleep 0.5
+done
+
+if [[ -z "$CARD" ]]; then
     echo "px13-audio-fix: no SoundWire ALSA card yet; skipping UCM apply"
     exit 0
 fi

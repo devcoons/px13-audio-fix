@@ -8,12 +8,11 @@ Syntax 8
 #     /usr/share/alsa/ucm2/conf.d/@DRIVER@/@LONGNAME@.conf
 #
 # THE PROBLEM
-#   Mainline kernels >= 7.1 carry the upstream snd-soc-tas2783-sdw driver, but
-#   the machine driver announces the card with components
-#   "cfg-amp:2 ... hs:rt721" and NO "spk:tas2783" tag. Without that tag the
-#   stock amd-soundwire.conf leaves SpeakerCodecFile empty, the HiFi profile
-#   exposes no Speaker device, and PipeWire falls back to a dummy sink: no
-#   sound from the internal speakers at all.
+#   Kernel 7.2 tags this card "spk:tas2783", and stock HiFi includes
+#   /sof-soundwire/tas2783.conf because of that. Kernels that omit the tag
+#   leave SpeakerCodecFile empty. This override forces the speaker codec for
+#   those cards. The speaker file itself must still be valid on its own:
+#   stock sof-soundwire.conf does not include /codecs/tas2783/init.conf.
 #
 # WHY THE FILENAME IS NOT A CONSTANT
 #   ucm.conf probes conf.d/${CardDriver}/${CardLongName}.conf FIRST and only
@@ -44,7 +43,7 @@ If.codec_default.Append.Define {
 	SpeakerCodecFile "tas2783"
 }
 
-# Pull in the codec init (defines SpeakerMixerElem and the stereo remap of the
-# two amps). The If.spk regex in the base config does not list tas2783, so the
-# include has to be explicit here.
+# Mixer remap for the two amps. The Speaker device does not depend on this
+# file: stock HiFi never includes it, so sof-soundwire/tas2783.conf has to
+# work without the variables defined here.
 Include.tas2783init.File "/codecs/tas2783/init.conf"

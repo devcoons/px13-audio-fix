@@ -15,7 +15,7 @@
 
 Name:           px13-audio-fix
 Version:        1.0
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        ASUS ProArt PX13 internal speaker fix (TAS2783 DKMS + ALSA UCM)
 
 # Kernel module: GPL-2.0-only (derived from the upstream tas2783 driver).
@@ -53,16 +53,17 @@ Provides:       px13-audio-fix-dkms = %{version}-%{release}
 Restores stereo internal speakers on the ASUS ProArt PX13 (HN7306, AMD
 Strix Halo / SoundWire TAS2783) under Fedora on stock kernels >= 7.1.
 
-The stock kernel driver initializes both speaker amplifiers on the same
-DSP channel, and the machine driver does not tag the ALSA card with
-spk:tas2783, so PipeWire never exposes a speaker sink. This package
-installs:
+On kernel 7.2 the in-tree driver already enumerates the TAS2783 amps and
+tags the card spk:tas2783, but both amps are given a two-channel SoundWire
+mask, so only one speaker renders audio. The stock HiFi verb also fails
+to open if the TAS2783 UCM file references a mixer variable that
+sof-soundwire.conf never defines; PipeWire then falls back to a dummy
+sink and every device on the card disappears. This package installs:
 
-- a PX13-specific snd-soc-tas2783-sdw DKMS module (channel-selection
-  control, rebuilds on every kernel update)
-- ALSA UCM files plus a SKU-probed long-name override
-- a oneshot service that writes the override for this machine's DMI
-  card name
+- a PX13 snd-soc-tas2783-sdw DKMS module based on the 7.2 driver, with a
+  per-amp playback channel mask (rebuilds on every kernel update)
+- an ALSA UCM speaker profile that uses the in-tree Left/Right Spk switches
+- a SKU-probed long-name override, retried until the SoundWire card exists
 
 Fedora-specific change: the DKMS module is built with GCC (Fedora's
 kernel toolchain). Building with LLVM/Clang fails against a GCC-built
@@ -105,6 +106,13 @@ if grep -E '^(MAKE|CLEAN).*LLVM=1' module/dkms.conf; then
     exit 1
 fi
 grep -F 'DEST_MODULE_LOCATION[0]="/extra"' module/dkms.conf
+grep -F 'sdca_parse_function(dev, peripheral, function_data)' module/tas2783-sdw.c
+grep -F 'port_config.ch_mask = 0x1' module/tas2783-sdw.c
+grep -F "name='Left Spk Switch'" configs/sof-soundwire_tas2783.conf
+if grep -F -q '${var:SpeakerMixerElem}' configs/sof-soundwire_tas2783.conf; then
+    echo "tas2783.conf must not reference SpeakerMixerElem" >&2
+    exit 1
+fi
 grep -F '/usr/share/px13-audio-fix/px13-detect.sh' px13-soundwire-recover.sh
 grep -F '/usr/libexec/px13-audio-fix/px13-soundwire-recover' 50-px13-soundwire
 bash -n fedora/px13-audio-fix-apply-ucm
@@ -225,6 +233,12 @@ fi
 %attr(0755,root,root) %{_prefix}/lib/systemd/system-sleep/50-px13-soundwire
 
 %changelog
+* Wed Sep 23 2026 devcoons <devcoons@users.noreply.github.com> - 1.0-2
+- Ship a TAS2783 UCM profile that the stock HiFi verb can open
+- Base the DKMS module on the kernel 7.2 driver and split the two amps
+  with a per-amp SoundWire channel mask
+- Retry UCM apply until the SoundWire card exists, and allow udev to run it again
+
 * Wed Aug 26 2026 devcoons <devcoons@users.noreply.github.com> - 1.0-1
 - Initial Fedora package for ASUS ProArt PX13 TAS2783 speakers
 - Vendored ftoleedo/px13-audio-fix (0de5121)

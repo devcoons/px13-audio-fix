@@ -6,3 +6,13 @@ rpmbuild/
 *.swp
 .DS_Store
 px13-audio-fix-1.0/
+
+# In-tree module build products. The RPM ships sources; DKMS builds the .ko.
+module/*.o
+module/*.ko
+module/*.mod
+module/*.mod.c
+module/*.cmd
+module/.*.cmd
+module/Module.symvers
+module/modules.order

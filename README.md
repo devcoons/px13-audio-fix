@@ -11,11 +11,11 @@ Tested on:
 | Component     | Version                         |
 |---------------|---------------------------------|
 | Fedora        | 44                              |
-| Kernel        | 7.1.10-200.fc44.x86_64          |
-| kernel-devel  | 7.1.10-200.fc44.x86_64          |
-| linux-firmware| 20260810-1.fc44                 |
-| PipeWire      | 1.6.8                           |
-| WirePlumber   | 0.5.14                          |
+| Kernel        | 7.2.7-200.fc44.x86_64           |
+| kernel-devel  | 7.2.7-200.fc44.x86_64           |
+| linux-firmware| 20260916-1.fc44                 |
+| PipeWire      | 1.6.9                           |
+| WirePlumber   | 0.5.17                          |
 | ALSA          | 1.2.16.1                        |
 | Secure Boot   | disabled                        |
 
@@ -57,12 +57,20 @@ PipeWire / WirePlumber
 Internal speakers
 ```
 
-Two remaining bugs on stock kernels >= 7.1 (the TAS2783 driver landed in 7.1):
+On a clean Fedora 44 install (kernel 7.2) the in-tree driver already loads
+the TAS2783 firmware and the card components include `spk:tas2783`. Two
+things still leave PipeWire on a dummy sink:
 
-1. The machine driver does not tag the card with `spk:tas2783`, so ALSA UCM
-   never creates a Speaker device.
-2. Both amplifiers initialize with DSP cluster index `0x01`, so you get mono
-   from one speaker (which one can change between boots).
+1. Stock `sof-soundwire` includes `/sof-soundwire/tas2783.conf` and does
+   **not** include `/codecs/tas2783/init.conf`. A speaker file that
+   references `${var:SpeakerMixerElem}` makes `snd_use_case_mgr_open()`
+   fail with `-EINVAL`. PipeWire then probes every PCM, including the
+   smart-amp capture device, which returns `-22`, and the session is left
+   with Dummy Output.
+2. `snd_sdw_params_to_config()` gives both mono amps a two-channel mask.
+   Only one speaker renders audio. The UDMPU cluster-index control is not
+   implemented on this silicon, so the split has to be a one-channel
+   SoundWire mask per amplifier (`0x8` left, `0xB` right).
 
 Fedora's `linux-firmware` already ships the PX13 TAS2783 firmware as:
 
@@ -76,8 +84,9 @@ Temporary aliases were tested during diagnosis; they did **not** fix
 initialization. Do **not** delete the Fedora `0x8` / `0xB` firmware files.
 This package only removes leftover aliases at the firmware root, if present.
 
-The complete fix is the PX13-specific DKMS module plus UCM, not firmware
-symlinks.
+The complete fix is a DKMS module built from the kernel 7.2 TAS2783 driver
+plus that channel mask, and a speaker UCM file that only touches the
+`Left`/`Right Spk` switches the in-tree driver already exposes.
 
 ## Fedora-specific DKMS change
 
@@ -97,7 +106,7 @@ installs the module under `/lib/modules/$(uname -r)/extra/`.
 
 ## Requirements
 
-- Fedora with kernel **>= 7.1**
+- Fedora with kernel **>= 7.2** (the DKMS module matches that driver's API)
 - **Secure Boot disabled**, or the DKMS module signed and enrolled
 - Matching `kernel-devel` (pulled by `kernel-devel-matched`)
 - `linux-firmware` containing the TAS2783 `0x8` / `0xB` blobs
