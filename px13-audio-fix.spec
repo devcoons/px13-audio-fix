@@ -14,8 +14,8 @@
 %undefine __brp_linkdupes
 
 Name:           px13-audio-fix
-Version:        1.0
-Release:        2%{?dist}
+Version:        1.1
+Release:        1%{?dist}
 Summary:        ASUS ProArt PX13 internal speaker fix (TAS2783 DKMS + ALSA UCM)
 
 # Kernel module: GPL-2.0-only (derived from the upstream tas2783 driver).
@@ -233,7 +233,7 @@ fi
 %attr(0755,root,root) %{_prefix}/lib/systemd/system-sleep/50-px13-soundwire
 
 %changelog
-* Wed Sep 23 2026 devcoons <devcoons@users.noreply.github.com> - 1.0-2
+* Wed Sep 23 2026 devcoons <devcoons@users.noreply.github.com> - 1.1-1
 - Ship a TAS2783 UCM profile that the stock HiFi verb can open
 - Base the DKMS module on the kernel 7.2 driver and split the two amps
   with a per-amp SoundWire channel mask
